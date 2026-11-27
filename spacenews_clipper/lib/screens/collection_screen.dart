@@ -17,15 +17,24 @@ class CollectionScreen extends StatefulWidget {
 class _CollectionScreenState extends State<CollectionScreen> {
   final CrudService _crud = CrudService();
   final ImagePicker _picker = ImagePicker();
+  final TextEditingController _searchCtrl = TextEditingController();
+
   List<MissionModel> _missions = [];
   List<ClippedNewsModel> _newsList = [];
   int? _filterMissionId;
+  String _searchQuery = '';
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _refreshData();
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _refreshData() async {
@@ -45,7 +54,6 @@ class _CollectionScreenState extends State<CollectionScreen> {
     }
   }
 
-  // Dialog Tambah/Edit Tabel 1 (Missions)
   void _showMissionDialog({MissionModel? mission}) {
     final ctrl = TextEditingController(text: mission?.name ?? '');
     showDialog(
@@ -53,7 +61,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: SpaceTheme.surfaceCard,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: SpaceTheme.borderSubtle),
         ),
         title: Text(
@@ -70,6 +78,10 @@ class _CollectionScreenState extends State<CollectionScreen> {
             child: const Text('Batal', style: TextStyle(color: SpaceTheme.textMuted)),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: SpaceTheme.accentAmber,
+              foregroundColor: SpaceTheme.cardTextDark,
+            ),
             onPressed: () async {
               if (ctrl.text.trim().isEmpty) return;
               if (mission == null) {
@@ -110,7 +122,6 @@ class _CollectionScreenState extends State<CollectionScreen> {
     return null;
   }
 
-  // Dialog Tambah/Edit Tabel 2 (Clipped News) dengan Pilih File Foto
   void _showNewsDialog({ClippedNewsModel? news}) {
     if (_missions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -157,7 +168,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
           return AlertDialog(
             backgroundColor: SpaceTheme.surfaceCard,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               side: const BorderSide(color: SpaceTheme.borderSubtle),
             ),
             title: Text(
@@ -172,27 +183,33 @@ class _CollectionScreenState extends State<CollectionScreen> {
                     value: selectedMission,
                     dropdownColor: SpaceTheme.surfaceElevated,
                     decoration: const InputDecoration(labelText: 'Kategori Misi'),
-                    items: _missions.map((m) => DropdownMenuItem(value: m.id, child: Text(m.name))).toList(),
+                    items: _missions
+                        .map((m) => DropdownMenuItem(value: m.id, child: Text(m.name)))
+                        .toList(),
                     onChanged: (v) => setDialogState(() => selectedMission = v!),
                   ),
                   const SizedBox(height: 10),
-                  TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Judul Berita')),
+                  TextField(
+                      controller: titleCtrl,
+                      decoration: const InputDecoration(labelText: 'Judul Berita')),
                   const SizedBox(height: 10),
-                  TextField(controller: siteCtrl, decoration: const InputDecoration(labelText: 'Sumber Berita')),
+                  TextField(
+                      controller: siteCtrl,
+                      decoration: const InputDecoration(labelText: 'Sumber Berita')),
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: SpaceTheme.surfaceElevated,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: SpaceTheme.borderSubtle),
                     ),
                     child: Column(
                       children: [
                         if (previewBytes != null) ...[
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                             child: Image.memory(
                               previewBytes!,
                               height: 120,
@@ -203,7 +220,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                           const SizedBox(height: 8),
                         ] else if (imageValue.startsWith('http')) ...[
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                             child: Image.network(
                               imageValue,
                               height: 120,
@@ -224,7 +241,9 @@ class _CollectionScreenState extends State<CollectionScreen> {
                                   side: const BorderSide(color: SpaceTheme.accentAmber),
                                 ),
                                 icon: const Icon(Icons.photo_library_outlined, size: 18),
-                                label: Text(previewBytes != null || imageValue.isNotEmpty ? 'Ganti Foto' : 'Pilih Foto'),
+                                label: Text(previewBytes != null || imageValue.isNotEmpty
+                                    ? 'Ganti Foto'
+                                    : 'Pilih Foto'),
                               ),
                             ),
                             if (previewBytes != null || imageValue.isNotEmpty) ...[
@@ -244,7 +263,10 @@ class _CollectionScreenState extends State<CollectionScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  TextField(controller: notesCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'Catatan / Ringkasan')),
+                  TextField(
+                      controller: notesCtrl,
+                      maxLines: 2,
+                      decoration: const InputDecoration(labelText: 'Catatan / Ringkasan')),
                 ],
               ),
             ),
@@ -254,6 +276,10 @@ class _CollectionScreenState extends State<CollectionScreen> {
                 child: const Text('Batal', style: TextStyle(color: SpaceTheme.textMuted)),
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SpaceTheme.accentAmber,
+                  foregroundColor: SpaceTheme.cardTextDark,
+                ),
                 onPressed: () async {
                   if (titleCtrl.text.trim().isEmpty) return;
                   if (news == null) {
@@ -289,11 +315,20 @@ class _CollectionScreenState extends State<CollectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredNews = _newsList.where((item) {
+      if (_searchQuery.isEmpty) return true;
+      final q = _searchQuery.toLowerCase();
+      return item.title.toLowerCase().contains(q) ||
+          (item.notes ?? '').toLowerCase().contains(q) ||
+          (item.newsSite ?? '').toLowerCase().contains(q);
+    }).toList();
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        backgroundColor: SpaceTheme.spaceBg,
         appBar: AppBar(
-          title: const Text('Koleksi Saya'),
+          title: const Text('Saved News'),
           bottom: const TabBar(
             indicatorColor: SpaceTheme.accentAmber,
             indicatorWeight: 3,
@@ -309,96 +344,210 @@ class _CollectionScreenState extends State<CollectionScreen> {
             ? const Center(child: CircularProgressIndicator(color: SpaceTheme.accentAmber))
             : TabBarView(
                 children: [
-                  // TAB 1: ITEM BERITA (TABEL 2)
+                  // TAB 1: BERITA TERSIMPAN (Gaya Saved News di referensi)
                   Scaffold(
-                    floatingActionButton: FloatingActionButton(
-                      onPressed: () => _showNewsDialog(),
-                      child: const Icon(Icons.add),
+                    backgroundColor: SpaceTheme.spaceBg,
+                    floatingActionButton: Padding(
+                      padding: const EdgeInsets.only(bottom: 75),
+                      child: FloatingActionButton(
+                        backgroundColor: SpaceTheme.accentAmber,
+                        foregroundColor: SpaceTheme.cardTextDark,
+                        onPressed: () => _showNewsDialog(),
+                        child: const Icon(Icons.add),
+                      ),
                     ),
                     body: Column(
                       children: [
+                        // Search Bar + Filter Kategori
                         Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: DropdownButtonFormField<int?>(
-                            value: _filterMissionId,
-                            dropdownColor: SpaceTheme.surfaceElevated,
-                            decoration: const InputDecoration(
-                              labelText: 'Filter Kategori Misi',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            ),
-                            items: [
-                              const DropdownMenuItem<int?>(value: null, child: Text('Semua Kategori')),
-                              ..._missions.map((m) => DropdownMenuItem<int?>(value: m.id, child: Text(m.name))),
+                          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchCtrl,
+                                  onChanged: (val) => setState(() => _searchQuery = val),
+                                  decoration: InputDecoration(
+                                    hintText: 'Search news...',
+                                    suffixIcon: Container(
+                                      margin: const EdgeInsets.all(6),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFF2C2C30),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.search,
+                                          color: Colors.white70, size: 18),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              // Dropdown Filter Kategori ringkas
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: SpaceTheme.surfaceCard,
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<int?>(
+                                    value: _filterMissionId,
+                                    dropdownColor: SpaceTheme.surfaceElevated,
+                                    icon: const Icon(Icons.filter_list_rounded,
+                                        color: SpaceTheme.accentAmber, size: 20),
+                                    hint: const Text('Semua',
+                                        style: TextStyle(fontSize: 13, color: Colors.white70)),
+                                    items: [
+                                      const DropdownMenuItem<int?>(
+                                          value: null, child: Text('Semua')),
+                                      ..._missions.map((m) => DropdownMenuItem<int?>(
+                                          value: m.id, child: Text(m.name))),
+                                    ],
+                                    onChanged: (val) {
+                                      setState(() => _filterMissionId = val);
+                                      _refreshData();
+                                    },
+                                  ),
+                                ),
+                              ),
                             ],
-                            onChanged: (val) {
-                              setState(() => _filterMissionId = val);
-                              _refreshData();
-                            },
                           ),
                         ),
+
+                        // Daftar Kartu Pastel Bertumpuk
                         Expanded(
-                          child: _newsList.isEmpty
+                          child: filteredNews.isEmpty
                               ? const Center(
-                                  child: Text('Belum ada berita tersimpan.', style: TextStyle(color: SpaceTheme.textMuted)),
+                                  child: Text(
+                                    'Belum ada berita tersimpan.',
+                                    style: TextStyle(color: SpaceTheme.textMuted),
+                                  ),
                                 )
                               : ListView.builder(
-                                  padding: const EdgeInsets.only(bottom: 80),
-                                  itemCount: _newsList.length,
+                                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
+                                  itemCount: filteredNews.length,
                                   itemBuilder: (ctx, i) {
-                                    final item = _newsList[i];
+                                    final item = filteredNews[i];
+                                    final cardColor = SpaceTheme
+                                        .pastelCards[i % SpaceTheme.pastelCards.length];
                                     final bytes = _bytesFromImageValue(item.imageUrl);
-                                    return Card(
-                                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      child: ListTile(
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                        leading: bytes != null
-                                            ? ClipRRect(
-                                                borderRadius: BorderRadius.circular(8),
-                                                child: Image.memory(bytes, width: 52, height: 52, fit: BoxFit.cover),
-                                              )
-                                            : (item.imageUrl != null && item.imageUrl!.startsWith('http')
-                                                ? ClipRRect(
-                                                    borderRadius: BorderRadius.circular(8),
+
+                                    // Efek tumpuk & sedikit miring bergantian seperti layar ke-2
+                                    final double tiltAngle = i == 0
+                                        ? 0.0
+                                        : (i % 2 == 1 ? -0.015 : 0.015);
+
+                                    return Transform.rotate(
+                                      angle: tiltAngle,
+                                      child: Container(
+                                        margin: EdgeInsets.only(top: i == 0 ? 0 : 10),
+                                        padding: const EdgeInsets.all(18),
+                                        decoration: BoxDecoration(
+                                          color: cardColor,
+                                          borderRadius: BorderRadius.circular(26),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.25),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, -3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    item.title,
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight: FontWeight.w800,
+                                                      color: SpaceTheme.cardTextDark,
+                                                      height: 1.2,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                if (bytes != null)
+                                                  ClipRRect(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    child: Image.memory(bytes,
+                                                        width: 54, height: 54, fit: BoxFit.cover),
+                                                  )
+                                                else if (item.imageUrl != null &&
+                                                    item.imageUrl!.startsWith('http'))
+                                                  ClipRRect(
+                                                    borderRadius: BorderRadius.circular(12),
                                                     child: Image.network(
                                                       item.imageUrl!,
-                                                      width: 52,
-                                                      height: 52,
+                                                      width: 54,
+                                                      height: 54,
                                                       fit: BoxFit.cover,
-                                                      errorBuilder: (_, __, ___) => const Icon(
-                                                        Icons.image_not_supported_outlined,
-                                                        color: SpaceTheme.textMuted,
-                                                      ),
+                                                      errorBuilder: (_, __, ___) =>
+                                                          const SizedBox.shrink(),
                                                     ),
-                                                  )
-                                                : null),
-                                        title: Text(
-                                          item.title,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
-                                        ),
-                                        subtitle: Padding(
-                                          padding: const EdgeInsets.only(top: 4),
-                                          child: Text(
-                                            '${item.mission?.name ?? '-'} • ${item.notes ?? ''}',
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(color: SpaceTheme.textMuted, fontSize: 12),
-                                          ),
-                                        ),
-                                        trailing: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.edit, color: SpaceTheme.accentCyan),
-                                              onPressed: () => _showNewsDialog(news: item),
+                                                  ),
+                                              ],
                                             ),
-                                            IconButton(
-                                              icon: const Icon(Icons.delete, color: Color(0xFFF87171)),
-                                              onPressed: () async {
-                                                await _crud.deleteClippedNews(item.id);
-                                                _refreshData();
-                                              },
+                                            if ((item.notes ?? '').isNotEmpty) ...[
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                item.notes!,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: SpaceTheme.cardTextDark
+                                                      .withValues(alpha: 0.78),
+                                                ),
+                                              ),
+                                            ],
+                                            const SizedBox(height: 12),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                      horizontal: 10, vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: SpaceTheme.cardTextDark
+                                                        .withValues(alpha: 0.1),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                  ),
+                                                  child: Text(
+                                                    item.mission?.name ?? 'Umum',
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: SpaceTheme.cardTextDark,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    InkWell(
+                                                      onTap: () => _showNewsDialog(news: item),
+                                                      child: const Icon(Icons.edit_rounded,
+                                                          color: SpaceTheme.cardTextDark, size: 20),
+                                                    ),
+                                                    const SizedBox(width: 14),
+                                                    InkWell(
+                                                      onTap: () async {
+                                                        await _crud.deleteClippedNews(item.id);
+                                                        _refreshData();
+                                                      },
+                                                      child: const Icon(Icons.delete_rounded,
+                                                          color: Color(0xFFD32F2F), size: 20),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
@@ -411,35 +560,59 @@ class _CollectionScreenState extends State<CollectionScreen> {
                     ),
                   ),
 
-                  // TAB 2: KATEGORI MISI (TABEL 1)
+                  // TAB 2: KATEGORI MISI
                   Scaffold(
-                    floatingActionButton: FloatingActionButton(
-                      onPressed: () => _showMissionDialog(),
-                      child: const Icon(Icons.add),
+                    backgroundColor: SpaceTheme.spaceBg,
+                    floatingActionButton: Padding(
+                      padding: const EdgeInsets.only(bottom: 75),
+                      child: FloatingActionButton(
+                        backgroundColor: SpaceTheme.accentAmber,
+                        foregroundColor: SpaceTheme.cardTextDark,
+                        onPressed: () => _showMissionDialog(),
+                        child: const Icon(Icons.add),
+                      ),
                     ),
                     body: _missions.isEmpty
                         ? const Center(
-                            child: Text('Belum ada kategori misi.', style: TextStyle(color: SpaceTheme.textMuted)),
+                            child: Text(
+                              'Belum ada kategori misi.',
+                              style: TextStyle(color: SpaceTheme.textMuted),
+                            ),
                           )
                         : ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 80),
+                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 110),
                             itemCount: _missions.length,
                             itemBuilder: (ctx, i) {
                               final m = _missions[i];
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 8),
+                              final cardColor =
+                                  SpaceTheme.pastelCards[i % SpaceTheme.pastelCards.length];
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                decoration: BoxDecoration(
+                                  color: cardColor,
+                                  borderRadius: BorderRadius.circular(22),
+                                ),
                                 child: ListTile(
-                                  leading: const Icon(Icons.folder_special, color: SpaceTheme.accentAmber),
-                                  title: Text(m.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                  leading: const Icon(Icons.folder_special_rounded,
+                                      color: SpaceTheme.cardTextDark),
+                                  title: Text(
+                                    m.name,
+                                    style: const TextStyle(
+                                      color: SpaceTheme.cardTextDark,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        icon: const Icon(Icons.edit, color: SpaceTheme.accentCyan),
+                                        icon: const Icon(Icons.edit_rounded,
+                                            color: SpaceTheme.cardTextDark),
                                         onPressed: () => _showMissionDialog(mission: m),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.delete, color: Color(0xFFF87171)),
+                                        icon: const Icon(Icons.delete_rounded,
+                                            color: Color(0xFFD32F2F)),
                                         onPressed: () async {
                                           await _crud.deleteMission(m.id);
                                           if (_filterMissionId == m.id) _filterMissionId = null;

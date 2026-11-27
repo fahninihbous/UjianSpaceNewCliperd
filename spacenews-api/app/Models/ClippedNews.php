@@ -11,3 +11,4 @@ class ClippedNews extends Model
         return $this->belongsTo(Mission::class);
     }
 }
+                                                                                                                                                                                                                                                                                       

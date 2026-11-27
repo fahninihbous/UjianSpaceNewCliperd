@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../routes/app_routing.dart';
 import '../services/auth_service.dart';
+import '../theme/space_theme.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -29,20 +30,37 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF0B132B),
+    return Scaffold(
+      backgroundColor: SpaceTheme.spaceBg,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.rocket_launch, size: 80, color: Colors.amber),
-            SizedBox(height: 16),
-            Text(
-              'SpaceNews Clipper',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+            Container(
+              width: 84,
+              height: 84,
+              decoration: const BoxDecoration(
+                color: SpaceTheme.accentAmber,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.rocket_launch_rounded,
+                size: 42,
+                color: SpaceTheme.cardTextDark,
+              ),
             ),
-            SizedBox(height: 20),
-            CircularProgressIndicator(color: Colors.amber),
+            const SizedBox(height: 18),
+            const Text(
+              'SpaceNews Clipper',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 22),
+            const CircularProgressIndicator(color: SpaceTheme.accentAmber),
           ],
         ),
       ),

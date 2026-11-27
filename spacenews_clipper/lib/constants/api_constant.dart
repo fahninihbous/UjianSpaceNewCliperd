@@ -1,5 +1,5 @@
 class ApiConstant {
-  static const String baseUrlLaravel = 'http:///10.124.107.2:8000/api';
+  static const String baseUrlLaravel = 'http:///10.10.10.158:8000/api';
   static const String publicApiUrl = 'https://api.spaceflightnewsapi.net/v4/articles';
 
   // Auth Endpoints

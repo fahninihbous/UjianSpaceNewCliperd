@@ -43,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: SpaceTheme.spaceBg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -52,30 +53,45 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Kartu Header Pastel Krem
                   Container(
-                    padding: const EdgeInsets.all(22),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: SpaceTheme.surfaceCard,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: SpaceTheme.borderSubtle),
+                      color: SpaceTheme.accentAmber,
+                      borderRadius: BorderRadius.circular(30),
                     ),
-                    child: const Column(
+                    child: Column(
                       children: [
-                        Icon(Icons.satellite_alt, size: 64, color: SpaceTheme.accentAmber),
-                        SizedBox(height: 12),
-                        Text(
-                          'SpaceNews Clipper',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: const BoxDecoration(
+                            color: SpaceTheme.cardTextDark,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.satellite_alt_rounded,
+                            size: 36,
+                            color: SpaceTheme.accentAmber,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'SpaceNews Clipper',
+                          style: TextStyle(
+                            fontSize: 23,
+                            fontWeight: FontWeight.w800,
+                            color: SpaceTheme.cardTextDark,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
                         Text(
                           'Masuk untuk menjelajah & mengarsipkan berita antariksa',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 13, color: SpaceTheme.textMuted),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: SpaceTheme.cardTextDark.withValues(alpha: 0.75),
+                          ),
                         ),
                       ],
                     ),
@@ -112,14 +128,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? const Center(child: CircularProgressIndicator(color: SpaceTheme.accentAmber))
                       : ElevatedButton(
                           onPressed: _handleLogin,
-                          child: const Text('LOGIN'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: SpaceTheme.accentAmber,
+                            foregroundColor: SpaceTheme.cardTextDark,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                          child: const Text(
+                            'LOGIN',
+                            style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.6),
+                          ),
                         ),
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () => Navigator.pushNamed(context, AppRouting.register),
                     child: const Text(
                       'Belum punya akun? Daftar di sini',
-                      style: TextStyle(color: SpaceTheme.accentCyan),
+                      style: TextStyle(color: SpaceTheme.accentAmber, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
